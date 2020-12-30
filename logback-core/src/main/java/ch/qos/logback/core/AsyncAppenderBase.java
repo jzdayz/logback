@@ -154,21 +154,27 @@ public class AsyncAppenderBase<E> extends UnsynchronizedAppenderBase<E> implemen
 
     @Override
     protected void append(E eventObject) {
+        // 如果可以丢弃该日志
         if (isQueueBelowDiscardingThreshold() && isDiscardable(eventObject)) {
             return;
         }
         preprocess(eventObject);
+        // 放入缓冲队列中
         put(eventObject);
     }
 
     private boolean isQueueBelowDiscardingThreshold() {
+        // 如果可以插入的数据小于"可以丢弃的阈值"
         return (blockingQueue.remainingCapacity() < discardingThreshold);
     }
 
     private void put(E eventObject) {
+        // 如果设置了"从不阻塞"
         if (neverBlock) {
+            // 尝试放入日志 => 这里如果队列满了，该日志就丢弃了，不建议设置neverBlock=true
             blockingQueue.offer(eventObject);
         } else {
+            // 阻塞放入队列，直到放入成功为止
             putUninterruptibly(eventObject);
         }
     }
